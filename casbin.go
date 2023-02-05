@@ -113,7 +113,6 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 			return
 		}
 		c.Next(ctx)
-		return
 	}
 }
 
@@ -161,7 +160,6 @@ func (m *Middleware) RequiresRoles(requiredRoles []string, opts ...Option) app.H
 			return
 		}
 		c.Next(ctx)
-		return
 	}
 }
 
