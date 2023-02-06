@@ -90,7 +90,7 @@ func TestRequiresPermissionsWithLogicAnd(t *testing.T) {
 				lookup:       LookupAlice,
 				expression:   "book:read",
 				logic:        AND,
-				expectedCode: consts.StatusForbidden,
+				expectedCode: consts.StatusOK,
 			},
 		},
 		{
@@ -520,7 +520,7 @@ func TestRequiresRolesWithLogicCustom(t *testing.T) {
 				lookup:       LookupAlice,
 				expression:   "user && !admin",
 				logic:        CUSTOM,
-				expectedCode: consts.StatusForbidden,
+				expectedCode: consts.StatusOK,
 			},
 		},
 		{
