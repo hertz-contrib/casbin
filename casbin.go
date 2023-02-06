@@ -16,11 +16,12 @@ package casbin
 
 import (
 	"context"
+	"strings"
+
 	"github.com/Knetic/govaluate"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"strings"
 )
 
 type Middleware struct {
