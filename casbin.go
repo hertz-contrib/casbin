@@ -16,10 +16,10 @@ package casbin
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 type Middleware struct {
@@ -79,11 +79,11 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 				vals := append([]string{sub}, options.PermissionParser(permission)...)
 				if vals[0] == "" || vals[1] == "" {
 					// Can not handle any illegal permission strings.
-					c.AbortWithStatus(http.StatusInternalServerError)
+					c.AbortWithStatus(consts.StatusInternalServerError)
 					return
 				}
 				if ok, err := m.enforcer.Enforce(stringSliceToInterfaceSlice(vals)...); err != nil {
-					c.AbortWithStatus(http.StatusInternalServerError)
+					c.AbortWithStatus(consts.StatusInternalServerError)
 					return
 				} else if !ok {
 					options.Forbidden(ctx, c)
@@ -98,11 +98,11 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 				values := append([]string{sub}, options.PermissionParser(permission)...)
 				if values[0] == "" || values[1] == "" {
 					// Can not handle any illegal permission strings.
-					c.AbortWithStatus(http.StatusInternalServerError)
+					c.AbortWithStatus(consts.StatusInternalServerError)
 					return
 				}
 				if ok, err := m.enforcer.Enforce(stringSliceToInterfaceSlice(values)...); err != nil {
-					c.AbortWithStatus(http.StatusInternalServerError)
+					c.AbortWithStatus(consts.StatusInternalServerError)
 					return
 				} else if ok {
 					c.Next(ctx)
@@ -134,7 +134,7 @@ func (m *Middleware) RequiresRoles(requiredRoles []string, opts ...Option) app.H
 		}
 		actualRoles, err := m.enforcer.GetRolesForUser(sub)
 		if err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.AbortWithStatus(consts.StatusInternalServerError)
 			return
 		}
 

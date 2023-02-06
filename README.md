@@ -81,10 +81,10 @@ func subjectFromSession(ctx context.Context, c *app.RequestContext) string {
 
 ## Options
 
-| Option           | Default                                                      | Description                                                  |
-| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Logic            | `AND`                                                        | Logic is the logical operation (AND/OR) used in permission checks in case multiple permissions or roles are specified. |
-| PermissionParser | `PermissionParserWithSeparator(":")`                         | PermissionParserFunc is used for parsing the permission to extract object and action usually. |
-| Unauthorized     | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(http.StatusUnauthorized) }` | Unauthorized defines the response body for unauthorized responses. |
-| Forbidden        | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(http.StatusForbidden) }` | Forbidden defines the response body for forbidden responses. |
+| Option           | Default                                                                                                | Description                                                                                                            |
+|------------------|--------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| Logic            | `AND`                                                                                                  | Logic is the logical operation (AND/OR) used in permission checks in case multiple permissions or roles are specified. |
+| PermissionParser | `PermissionParserWithSeparator(":")`                                                                   | PermissionParserFunc is used for parsing the permission to extract object and action usually.                          |
+| Unauthorized     | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(consts.StatusUnauthorized) }` | Unauthorized defines the response body for unauthorized responses.                                                     |
+| Forbidden        | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(consts.StatusForbidden) }`    | Forbidden defines the response body for forbidden responses.                                                           |
 

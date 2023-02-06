@@ -17,10 +17,10 @@ package casbin
 import (
 	"context"
 	"errors"
-	"net/http"
 	"strings"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
 // LookupHandler is used to look up current subject in runtime.
@@ -60,13 +60,13 @@ type Options struct {
 
 	// Unauthorized defines the response body for unauthorized responses.
 	// Optional. Default: func(ctx context.Context, c *app.RequestContext) {
-	//		c.AbortWithStatus(http.StatusUnauthorized)
+	//		c.AbortWithStatus(consts.StatusUnauthorized)
 	//	},
 	Unauthorized app.HandlerFunc
 
 	// Forbidden defines the response body for forbidden responses.
 	// Optional. Default: func(ctx context.Context, c *app.RequestContext) {
-	//		c.AbortWithStatus(http.StatusForbidden)
+	//		c.AbortWithStatus(consts.StatusForbidden)
 	//	},
 	Forbidden app.HandlerFunc
 }
@@ -82,10 +82,10 @@ var OptionsDefault = Options{
 	Logic:            AND,
 	PermissionParser: PermissionParserWithSeparator(":"),
 	Unauthorized: func(ctx context.Context, c *app.RequestContext) {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.AbortWithStatus(consts.StatusUnauthorized)
 	},
 	Forbidden: func(ctx context.Context, c *app.RequestContext) {
-		c.AbortWithStatus(http.StatusForbidden)
+		c.AbortWithStatus(consts.StatusForbidden)
 	},
 }
 
@@ -109,6 +109,7 @@ func WithLogic(logic Logic) Option {
 	}
 }
 
+// WithPermissionParser sets parsing the permission func.
 func WithPermissionParser(pp PermissionParserFunc) Option {
 	return Option{
 		F: func(o *Options) {
@@ -117,6 +118,7 @@ func WithPermissionParser(pp PermissionParserFunc) Option {
 	}
 }
 
+// WithUnauthorized defines the response body for unauthorized responses.
 func WithUnauthorized(u app.HandlerFunc) Option {
 	return Option{
 		F: func(o *Options) {
@@ -125,6 +127,7 @@ func WithUnauthorized(u app.HandlerFunc) Option {
 	}
 }
 
+// WithForbidden defines the response body for forbidden responses.
 func WithForbidden(f app.HandlerFunc) Option {
 	return Option{
 		F: func(o *Options) {
@@ -133,6 +136,7 @@ func WithForbidden(f app.HandlerFunc) Option {
 	}
 }
 
+// PermissionParserWithSeparator is a permission parser with separator.
 func PermissionParserWithSeparator(sep string) PermissionParserFunc {
 	return func(str string) []string {
 		return strings.Split(str, sep)
