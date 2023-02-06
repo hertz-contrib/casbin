@@ -16,8 +16,9 @@ package casbin
 
 import (
 	"context"
-	"github.com/Knetic/govaluate"
 	"strings"
+
+	"github.com/Knetic/govaluate"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"

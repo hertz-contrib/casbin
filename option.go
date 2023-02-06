@@ -57,7 +57,8 @@ type Options struct {
 	// PermissionParserFunc is used for parsing the permission
 	// to extract object and action usually
 	// Optional. Default: PermissionParserWithSeparator(":")
-	PermissionParser    PermissionParserFunc
+	PermissionParser PermissionParserFunc
+	// PermissionSeparator permission parsing separator
 	PermissionSeparator string
 
 	// Unauthorized defines the response body for unauthorized responses.
@@ -100,7 +101,7 @@ func NewOptions(opts ...Option) *Options {
 	options := &Options{
 		Logic:               OptionsDefault.Logic,
 		PermissionParser:    OptionsDefault.PermissionParser,
-		PermissionSeparator: DefaultPermissionSeparator,
+		PermissionSeparator: OptionsDefault.PermissionSeparator,
 		Unauthorized:        OptionsDefault.Unauthorized,
 		Forbidden:           OptionsDefault.Forbidden,
 	}
