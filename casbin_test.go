@@ -63,100 +63,156 @@ func TestRequiresPermissions(t *testing.T) {
 	tests := []struct {
 		policyFile   string
 		lookup       LookupHandler
-		permissions  []string
+		expression   string
 		logic        Logic
 		expectedCode int
 	}{
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:read"},
+			expression:   "book:read",
 			logic:        AND,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:read"},
+			expression:   "book:read",
 			logic:        OR,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   readWritePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:read", "book:write"},
+			expression:   "book:read book:write",
 			logic:        AND,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   readWritePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:read", "book:write"},
+			expression:   "book:read book:write",
 			logic:        OR,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupNil,
-			permissions:  []string{"book:read"},
+			expression:   "book:read",
 			logic:        AND,
 			expectedCode: consts.StatusUnauthorized,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:write"},
+			expression:   "book:write",
 			logic:        AND,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:write"},
+			expression:   "book:write",
 			logic:        OR,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:read", "book:write"},
+			expression:   "book:read book:write",
 			logic:        AND,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"book:review", "book:write"},
+			expression:   "book:review book:write",
 			logic:        OR,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"readbook"},
+			expression:   "readbook",
 			logic:        AND,
 			expectedCode: consts.StatusInternalServerError,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{":"},
+			expression:   ":",
 			logic:        AND,
 			expectedCode: consts.StatusInternalServerError,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{"readbook"},
+			expression:   "",
+			logic:        AND,
+			expectedCode: consts.StatusOK,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "readbook",
 			logic:        OR,
 			expectedCode: consts.StatusInternalServerError,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			permissions:  []string{":"},
+			expression:   ":",
 			logic:        OR,
 			expectedCode: consts.StatusInternalServerError,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "",
+			logic:        OR,
+			expectedCode: consts.StatusOK,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "book:read",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusOK,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "book:write",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusForbidden,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "!book:read",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusForbidden,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "!book:write",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusOK,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "book:read && book:write",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusForbidden,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "book:read || book:write",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusOK,
 		},
 	}
 
@@ -166,7 +222,7 @@ func TestRequiresPermissions(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r := setupRouter(middleware.RequiresPermissions(tt.permissions, WithLogic(tt.logic)))
+		r := setupRouter(middleware.RequiresPermissions(tt.expression, WithLogic(tt.logic)))
 
 		rsp := ut.PerformRequest(r.Engine, "GET", "/book", nil)
 
@@ -178,72 +234,107 @@ func TestRequiresRoles(t *testing.T) {
 	tests := []struct {
 		policyFile   string
 		lookup       LookupHandler
-		roles        []string
+		expression   string
 		logic        Logic
 		expectedCode int
 	}{
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"user"},
+			expression:   "user",
 			logic:        AND,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"user"},
+			expression:   "user",
 			logic:        OR,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   userAdminPolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"user", "admin"},
+			expression:   "user admin",
 			logic:        AND,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   userAdminPolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"user", "admin"},
+			expression:   "user admin",
 			logic:        OR,
 			expectedCode: consts.StatusOK,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupNil,
-			roles:        []string{"user"},
+			expression:   "user",
 			logic:        AND,
 			expectedCode: consts.StatusUnauthorized,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"admin"},
+			expression:   "admin",
 			logic:        AND,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"admin"},
+			expression:   "admin",
 			logic:        OR,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"user", "admin"},
+			expression:   "user admin",
 			logic:        AND,
 			expectedCode: consts.StatusForbidden,
 		},
 		{
 			policyFile:   simplePolicy,
 			lookup:       LookupAlice,
-			roles:        []string{"root", "admin"},
+			expression:   "root admin",
 			logic:        OR,
 			expectedCode: consts.StatusForbidden,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "user",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusOK,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "admin",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusForbidden,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "user && admin",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusForbidden,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "user || admin",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusOK,
+		},
+		{
+			policyFile:   simplePolicy,
+			lookup:       LookupAlice,
+			expression:   "user && !admin",
+			logic:        CUSTOM,
+			expectedCode: consts.StatusOK,
 		},
 	}
 
@@ -253,7 +344,7 @@ func TestRequiresRoles(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r := setupRouter(middleware.RequiresRoles(tt.roles, WithLogic(tt.logic)))
+		r := setupRouter(middleware.RequiresRoles(tt.expression, WithLogic(tt.logic)))
 
 		rsp := ut.PerformRequest(r.Engine, "GET", "/book", nil)
 
@@ -270,7 +361,7 @@ func TestOption(t *testing.T) {
 	tests := []struct {
 		policyFile         string
 		lookup             LookupHandler
-		permissions        []string
+		expression         string
 		logic              Logic
 		expectedCode       int
 		expectedTestHeader string
@@ -278,7 +369,7 @@ func TestOption(t *testing.T) {
 		{
 			policyFile:         simplePolicy,
 			lookup:             LookupNil,
-			permissions:        []string{"book-read"},
+			expression:         "book-read",
 			logic:              AND,
 			expectedCode:       consts.StatusUnauthorized,
 			expectedTestHeader: "StatusUnauthorized",
@@ -286,7 +377,7 @@ func TestOption(t *testing.T) {
 		{
 			policyFile:         simplePolicy,
 			lookup:             LookupAlice,
-			permissions:        []string{"book-write"},
+			expression:         "book-write",
 			logic:              AND,
 			expectedCode:       consts.StatusForbidden,
 			expectedTestHeader: "StatusForbidden",
@@ -299,7 +390,7 @@ func TestOption(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		r := setupRouter(middleware.RequiresPermissions(tt.permissions, WithLogic(tt.logic),
+		r := setupRouter(middleware.RequiresPermissions(tt.expression, WithLogic(tt.logic),
 			WithForbidden(func(c context.Context, ctx *app.RequestContext) {
 				ctx.Header("test", "StatusForbidden")
 				ctx.AbortWithStatus(consts.StatusForbidden)

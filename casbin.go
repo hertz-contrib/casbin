@@ -16,6 +16,8 @@ package casbin
 
 import (
 	"context"
+	"github.com/Knetic/govaluate"
+	"strings"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -58,11 +60,11 @@ func NewCasbinMiddlewareFromEnforcer(e *casbin.Enforcer, lookup LookupHandler) (
 
 // RequiresPermissions tries to find the current subject and determine if the
 // subject has the required permissions according to predefined Casbin policies.
-func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) app.HandlerFunc {
+func (m *Middleware) RequiresPermissions(expression string, opts ...Option) app.HandlerFunc {
 	// Here we provide default options.
 	options := NewOptions(opts...)
 	return func(ctx context.Context, c *app.RequestContext) {
-		if len(permissions) == 0 {
+		if expression == "" {
 			c.Next(ctx)
 			return
 		}
@@ -75,6 +77,7 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 		// Enforce Casbin policies.
 		if options.Logic == AND {
 			// Must pass all tests.
+			permissions := strings.Split(expression, " ")
 			for _, permission := range permissions {
 				vals := append([]string{sub}, options.PermissionParser(permission)...)
 				if vals[0] == "" || vals[1] == "" {
@@ -94,6 +97,7 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 			return
 		} else if options.Logic == OR {
 			// Need to pass at least one test.
+			permissions := strings.Split(expression, " ")
 			for _, permission := range permissions {
 				values := append([]string{sub}, options.PermissionParser(permission)...)
 				if values[0] == "" || values[1] == "" {
@@ -111,6 +115,54 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 			}
 			options.Forbidden(ctx, c)
 			return
+		} else if options.Logic == CUSTOM {
+			expression = strings.Replace(expression, options.PermissionSeparator, "\\"+options.PermissionSeparator, -1)
+			exp, err := govaluate.NewEvaluableExpression(expression)
+			if err != nil {
+				c.AbortWithStatus(consts.StatusInternalServerError)
+				return
+			}
+
+			permissions := exp.Vars()
+			params := make(map[string]interface{}, len(permissions))
+
+			for _, permission := range permissions {
+				vals := append([]string{sub}, options.PermissionParser(permission)...)
+				if vals[0] == "" || vals[1] == "" {
+					// Can not handle any illegal permission strings.
+					c.AbortWithStatus(consts.StatusInternalServerError)
+					return
+				}
+				if ok, err := m.enforcer.Enforce(stringSliceToInterfaceSlice(vals)...); err != nil {
+					c.AbortWithStatus(consts.StatusInternalServerError)
+					return
+				} else {
+					if ok {
+						params[permission] = true
+					} else {
+						params[permission] = false
+					}
+				}
+			}
+
+			result, err := exp.Evaluate(params)
+			if err != nil {
+				c.AbortWithStatus(consts.StatusInternalServerError)
+				return
+			}
+
+			if res, ok := result.(bool); !ok {
+				c.AbortWithStatus(consts.StatusInternalServerError)
+				return
+			} else {
+				if !res {
+					options.Forbidden(ctx, c)
+					return
+				}
+			}
+
+			c.Next(ctx)
+			return
 		}
 		c.Next(ctx)
 	}
@@ -118,11 +170,11 @@ func (m *Middleware) RequiresPermissions(permissions []string, opts ...Option) a
 
 // RequiresRoles tries to find the current subject and determine if the
 // subject has the required roles according to predefined Casbin policies.
-func (m *Middleware) RequiresRoles(requiredRoles []string, opts ...Option) app.HandlerFunc {
+func (m *Middleware) RequiresRoles(expression string, opts ...Option) app.HandlerFunc {
 	// Here we provide default options.
 	options := NewOptions(opts...)
 	return func(ctx context.Context, c *app.RequestContext) {
-		if len(requiredRoles) == 0 {
+		if expression == "" {
 			c.Next(ctx)
 			return
 		}
@@ -140,6 +192,7 @@ func (m *Middleware) RequiresRoles(requiredRoles []string, opts ...Option) app.H
 
 		if options.Logic == AND {
 			// Must have all required roles.
+			requiredRoles := strings.Split(expression, " ")
 			for _, role := range requiredRoles {
 				if !containsString(actualRoles, role) {
 					options.Forbidden(ctx, c)
@@ -150,6 +203,7 @@ func (m *Middleware) RequiresRoles(requiredRoles []string, opts ...Option) app.H
 			return
 		} else if options.Logic == OR {
 			// Need to have at least one of required roles.
+			requiredRoles := strings.Split(expression, " ")
 			for _, role := range requiredRoles {
 				if containsString(actualRoles, role) {
 					c.Next(ctx)
@@ -157,6 +211,42 @@ func (m *Middleware) RequiresRoles(requiredRoles []string, opts ...Option) app.H
 				}
 			}
 			options.Forbidden(ctx, c)
+			return
+		} else if options.Logic == CUSTOM {
+			exp, err := govaluate.NewEvaluableExpression(expression)
+			if err != nil {
+				c.AbortWithStatus(consts.StatusInternalServerError)
+				return
+			}
+
+			requiredRoles := exp.Vars()
+			params := make(map[string]interface{}, len(requiredRoles))
+
+			for _, requiredRole := range requiredRoles {
+				params[requiredRole] = false
+			}
+
+			for _, actualRole := range actualRoles {
+				params[actualRole] = true
+			}
+
+			result, err := exp.Evaluate(params)
+			if err != nil {
+				c.AbortWithStatus(consts.StatusInternalServerError)
+				return
+			}
+
+			if res, ok := result.(bool); !ok {
+				c.AbortWithStatus(consts.StatusInternalServerError)
+				return
+			} else {
+				if !res {
+					options.Forbidden(ctx, c)
+					return
+				}
+			}
+
+			c.Next(ctx)
 			return
 		}
 		c.Next(ctx)
