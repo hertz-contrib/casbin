@@ -16,6 +16,7 @@ package casbin
 
 import (
 	"context"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"strings"
 
 	"github.com/Knetic/govaluate"
@@ -124,7 +125,7 @@ func (m *Middleware) RequiresPermissions(expression string, opts ...Option) app.
 			}
 
 			permissions := exp.Vars()
-			params := make(map[string]interface{}, len(permissions))
+			params := make(utils.H, len(permissions))
 
 			for _, permission := range permissions {
 				vals := append([]string{sub}, options.PermissionParser(permission)...)
@@ -220,7 +221,7 @@ func (m *Middleware) RequiresRoles(expression string, opts ...Option) app.Handle
 			}
 
 			requiredRoles := exp.Vars()
-			params := make(map[string]interface{}, len(requiredRoles))
+			params := make(utils.H, len(requiredRoles))
 
 			for _, requiredRole := range requiredRoles {
 				params[requiredRole] = false
