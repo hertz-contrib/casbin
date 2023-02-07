@@ -96,10 +96,10 @@ func subjectFromSession(ctx context.Context, c *app.RequestContext) string {
 
 | Option                    | Default                                                      | Description                                                  |
 | ------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Logic                     | `AND`                                                        | Logic is the logical operation (AND/OR/CUSTOM) used in permission checks in case multiple permissions or roles are specified. |
-| PermissionParser          | `PermissionParserWithSeparator(":")`                         | PermissionParserFunc is used for parsing the permission to extract object and action usually. |
-| PermissionParserSeparator | `*`                                                          | PermissionParserSeparator is used for parsing the permission to extract object and action usually. |
-| Unauthorized              | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(consts.StatusUnauthorized) }` | Unauthorized defines the response body for unauthorized responses. |
-| Forbidden                 | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(consts.StatusForbidden) }` | Forbidden defines the response body for forbidden responses. |
+| Logic                     | AND                                                          | Logic is the logical operation (AND/OR/CUSTOM) used in permission checks in case multiple permissions or roles are specified. |
+| PermissionParser          | PermissionParserWithSeparator(":")                           | PermissionParserFunc is used for parsing the permission to extract object and action usually. |
+| PermissionParserSeparator | *                                                            | PermissionParserSeparator is used for parsing the permission to extract object and action usually. |
+| Unauthorized              | func(ctx context.Context, c *app.RequestContext) { c.AbortWithStatus(consts.StatusUnauthorized) }  | Unauthorized defines the response body for unauthorized responses. |
+| Forbidden                 | func(ctx context.Context, c *app.RequestContext) { c.AbortWithStatus(consts.StatusForbidden) } | Forbidden defines the response body for forbidden responses. |
 
-**attention**: when use `CUSTOM` in `WithLogic`, use `WithPermissionParser` Option is forbidden
+**Attention**: when use `CUSTOM` in `WithLogic`, use `WithPermissionParser` Option is forbidden.
