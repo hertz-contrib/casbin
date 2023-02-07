@@ -27,7 +27,7 @@ import (
 
 type Middleware struct {
 	// Enforcer is the main interface for authorization enforcement and policy management.
-	enforcer *casbin.Enforcer
+	enforcer casbin.IEnforcer
 	// LookupHandler is used to look up current subject in runtime.
 	// If it can not find anything, just return an empty string.
 	lookup LookupHandler
@@ -48,7 +48,7 @@ func NewCasbinMiddleware(modelFile string, adapter interface{}, lookup LookupHan
 }
 
 // NewCasbinMiddlewareFromEnforcer creates from given Enforcer.
-func NewCasbinMiddlewareFromEnforcer(e *casbin.Enforcer, lookup LookupHandler) (*Middleware, error) {
+func NewCasbinMiddlewareFromEnforcer(e casbin.IEnforcer, lookup LookupHandler) (*Middleware, error) {
 	if lookup == nil {
 		return nil, errLookupNil
 	}
