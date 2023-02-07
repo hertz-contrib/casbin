@@ -38,6 +38,7 @@ type PermissionParserFunc func(str string) []string
 const (
 	AND Logic = iota
 	OR
+	CUSTOM
 )
 
 var errLookupNil = errors.New("[Casbin] Lookup is nil")
@@ -57,6 +58,8 @@ type Options struct {
 	// to extract object and action usually
 	// Optional. Default: PermissionParserWithSeparator(":")
 	PermissionParser PermissionParserFunc
+	// PermissionSeparator permission parsing separator
+	PermissionSeparator string
 
 	// Unauthorized defines the response body for unauthorized responses.
 	// Optional. Default: func(ctx context.Context, c *app.RequestContext) {
@@ -78,9 +81,14 @@ func (o *Options) Apply(opts []Option) {
 	}
 }
 
+const (
+	DefaultPermissionSeparator = ":"
+)
+
 var OptionsDefault = Options{
-	Logic:            AND,
-	PermissionParser: PermissionParserWithSeparator(":"),
+	Logic:               AND,
+	PermissionParser:    PermissionParserWithSeparator(DefaultPermissionSeparator),
+	PermissionSeparator: DefaultPermissionSeparator,
 	Unauthorized: func(ctx context.Context, c *app.RequestContext) {
 		c.AbortWithStatus(consts.StatusUnauthorized)
 	},
@@ -91,10 +99,11 @@ var OptionsDefault = Options{
 
 func NewOptions(opts ...Option) *Options {
 	options := &Options{
-		Logic:            OptionsDefault.Logic,
-		PermissionParser: OptionsDefault.PermissionParser,
-		Unauthorized:     OptionsDefault.Unauthorized,
-		Forbidden:        OptionsDefault.Forbidden,
+		Logic:               OptionsDefault.Logic,
+		PermissionParser:    OptionsDefault.PermissionParser,
+		PermissionSeparator: OptionsDefault.PermissionSeparator,
+		Unauthorized:        OptionsDefault.Unauthorized,
+		Forbidden:           OptionsDefault.Forbidden,
 	}
 	options.Apply(opts)
 	return options
@@ -110,10 +119,21 @@ func WithLogic(logic Logic) Option {
 }
 
 // WithPermissionParser sets parsing the permission func.
+// Attention: It is only enabled when logic is `AND` or `OR`
 func WithPermissionParser(pp PermissionParserFunc) Option {
 	return Option{
 		F: func(o *Options) {
 			o.PermissionParser = pp
+		},
+	}
+}
+
+// WithPermissionParserSeparator sets permission parsing separator
+func WithPermissionParserSeparator(sep string) Option {
+	return Option{
+		F: func(o *Options) {
+			o.PermissionParser = PermissionParserWithSeparator(sep)
+			o.PermissionSeparator = sep
 		},
 	}
 }
