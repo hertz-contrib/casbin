@@ -102,26 +102,4 @@ func subjectFromSession(ctx context.Context, c *app.RequestContext) string {
 | Unauthorized              | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(consts.StatusUnauthorized) }` | Unauthorized defines the response body for unauthorized responses. |
 | Forbidden                 | `func(ctx context.Context, c *app.RequestContext) {    c.AbortWithStatus(consts.StatusForbidden) }` | Forbidden defines the response body for forbidden responses. |
 
-- `WithLogic(logic Logic)`
-
-    **Default**: `AND`
-
-    `Logic` is the logical operation (`AND`/`OR`/`CUSTOM`) used in permission checks in case multiple permissions or roles are specified
-
-    
-
-    when use logic `AND` or `OR`，input param named `expression` will be separated by space to permissions or roles in `RequiresPermissions` or `RequiresRoles`
-
-    you need input `expression` as param in `RequiresPermissions` or `RequiresRoles` like:
-
-    `book:read`，`book:read book:write`，`book:read book:write book:delete`，`user admin`
-
-
-
-​		when use logic `CUSTOM`，input param will be parsed as C-like artithmetic/string expression，
-
-​		you need input `expression` as param in `RequiresPermissions` or `RequiresRoles` like:
-
-​		`book:read && book:write`，`user && admin`
-
-​		**attention**: when use `CUSTOM`, use `WithPermissionParser` Option is forbidden
+**attention**: when use `CUSTOM` in `WithLogic`, use `WithPermissionParser` Option is forbidden

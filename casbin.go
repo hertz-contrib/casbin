@@ -16,12 +16,12 @@ package casbin
 
 import (
 	"context"
-	"github.com/cloudwego/hertz/pkg/common/utils"
 	"strings"
 
 	"github.com/Knetic/govaluate"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
 
