@@ -56,24 +56,24 @@ func main() {
         }
         c.String(200, "you login successfully")
     })
-    
-    h.GET("/book", auth.RequiresPermissions("book:read", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
+
+    h.GET("/book/r", auth.RequiresPermissions("book:read", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
         c.String(200, "you read the book successfully")
     })
-    h.GET("/book", auth.RequiresPermissions("book:read book:write", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
+    h.GET("/book/rw", auth.RequiresPermissions("book:read book:write", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
         c.String(200, "you read the book failed")
     })
-    h.GET("/book", auth.RequiresPermissions("book:read && book:write", casbin.WithLogic(casbin.CUSTOM)), func(ctx context.Context, c *app.RequestContext) {
+    h.GET("/book/custom/rw", auth.RequiresPermissions("book:read && book:write", casbin.WithLogic(casbin.CUSTOM)), func(ctx context.Context, c *app.RequestContext) {
         c.String(200, "you read the book failed")
     })
     
-    h.POST("/book", auth.RequiresRoles("user", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
+    h.POST("/book/u", auth.RequiresRoles("user", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
         c.String(200, "you posted a book successfully")
     })
-    h.POST("/book", auth.RequiresRoles("user admin", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
+    h.POST("/book/ua", auth.RequiresRoles("user admin", casbin.WithLogic(casbin.AND)), func(ctx context.Context, c *app.RequestContext) {
         c.String(200, "you posted a book failed")
     })
-    h.POST("/book", auth.RequiresRoles("user && admin", casbin.WithLogic(casbin.CUSTOM)), func(ctx context.Context, c *app.RequestContext) {
+    h.POST("/book/custom/ua", auth.RequiresRoles("user && admin", casbin.WithLogic(casbin.CUSTOM)), func(ctx context.Context, c *app.RequestContext) {
         c.String(200, "you posted a book failed")
     })
     
