@@ -274,7 +274,7 @@ func TestRequiresPermissionsWithAction(t *testing.T) {
 			},
 		},
 		{
-			name: "input exist and exist permission",
+			name: "input two exist permissions",
 			args: args{
 				policyFile:   readWritePolicy,
 				lookup:       LookupAlice,
