@@ -231,6 +231,86 @@ func TestRequiresPermissionsWithLogicOr(t *testing.T) {
 	}
 }
 
+func TestRequiresPermissionsWithAction(t *testing.T) {
+	type args struct {
+		policyFile   string
+		lookup       LookupHandler
+		expression   string
+		logic        Logic
+		expectedCode int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "have read permission",
+			args: args{
+				policyFile:   readWritePolicy,
+				lookup:       LookupAlice,
+				expression:   "book:read",
+				logic:        AND,
+				expectedCode: consts.StatusOK,
+			},
+		},
+		{
+			name: "have write expression",
+			args: args{
+				policyFile:   readWritePolicy,
+				lookup:       LookupAlice,
+				expression:   "book:write",
+				logic:        AND,
+				expectedCode: consts.StatusOK,
+			},
+		},
+		{
+			name: "have not modify permission",
+			args: args{
+				policyFile:   readWritePolicy,
+				lookup:       LookupAlice,
+				expression:   "book:modify",
+				logic:        AND,
+				expectedCode: consts.StatusForbidden,
+			},
+		},
+		{
+			name: "input two exist permissions",
+			args: args{
+				policyFile:   readWritePolicy,
+				lookup:       LookupAlice,
+				expression:   "book:read book:write",
+				logic:        AND,
+				expectedCode: consts.StatusOK,
+			},
+		},
+		{
+			name: "input exist and not exist permission",
+			args: args{
+				policyFile:   readWritePolicy,
+				lookup:       LookupAlice,
+				expression:   "book:read book:modify",
+				logic:        AND,
+				expectedCode: consts.StatusForbidden,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			middleware, err := NewCasbinMiddleware(modelFile, tt.args.policyFile, tt.args.lookup)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			r := setupRouter(middleware.RequiresPermissions(tt.args.expression, WithLogic(tt.args.logic)))
+
+			rsp := ut.PerformRequest(r.Engine, "GET", "/book", nil)
+
+			assert.DeepEqual(t, tt.args.expectedCode, rsp.Code)
+		})
+	}
+}
+
 func TestRequiresPermissionsWithLogicCustom(t *testing.T) {
 	type args struct {
 		policyFile   string
